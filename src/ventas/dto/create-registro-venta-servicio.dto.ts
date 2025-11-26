@@ -8,6 +8,16 @@ import { Type } from 'class-transformer';
  */
 export class CreateRegistroVentaServicioDto {
   @ApiProperty({
+    description: 'ID de la venta (opcional, solo para actualizaciones)',
+    example: 123,
+    required: false,
+  })
+  @IsNumber()
+  @IsOptional()
+  @Type(() => Number)
+  id?: number;
+
+  @ApiProperty({
     description: 'ID del usuario/cliente',
     example: 1,
   })
@@ -32,24 +42,6 @@ export class CreateRegistroVentaServicioDto {
   @IsString()
   @IsNotEmpty()
   service_external_id: string;
-
-  @ApiProperty({
-    description: 'Nombre del servicio (opcional, se puede obtener del servicio)',
-    example: 'Corte de cabello',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  service_name?: string;
-
-  @ApiProperty({
-    description: 'Descripción del servicio (opcional, se puede obtener del servicio)',
-    example: 'Corte de cabello profesional',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  service_description?: string;
 
   @ApiProperty({
     description: 'Precio del servicio',
@@ -80,25 +72,24 @@ export class CreateRegistroVentaServicioDto {
   apointment_time?: string;
 
   @ApiProperty({
-    description: 'Duración del servicio en minutos (opcional, se puede obtener del servicio)',
-    example: 30,
+    description: 'Estado del pago (PENDIENTE, PAGADA, CANCELADA, etc.) - se mapea a estado_venta_id',
+    example: 'PENDIENTE',
     required: false,
   })
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  @Type(() => Number)
-  duration?: number;
+  payment_status?: string;
 
   @ApiProperty({
-    description: 'ID del estado de venta (opcional, se usará PENDIENTE por defecto si no se proporciona)',
-    example: 1,
+    description: 'Método de pago (TARJETA, EFECTIVO, etc.) - opcional, se retorna en la respuesta',
+    example: 'TARJETA',
     required: false,
   })
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  @Type(() => Number)
-  estado_venta_id?: number;
+  payment_method?: string;
 
+  // Campos opcionales para compatibilidad y flexibilidad
   @ApiProperty({
     description: 'Cantidad del servicio (default: 1)',
     example: 1,
@@ -138,14 +129,5 @@ export class CreateRegistroVentaServicioDto {
   @IsString()
   @IsOptional()
   comentarios?: string;
-
-  @ApiProperty({
-    description: 'Método de pago (TARJETA, EFECTIVO, etc.) - opcional, se retorna en la respuesta',
-    example: 'TARJETA',
-    required: false,
-  })
-  @IsString()
-  @IsOptional()
-  payment_method?: string;
 }
 

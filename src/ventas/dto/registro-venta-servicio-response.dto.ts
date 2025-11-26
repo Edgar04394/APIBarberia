@@ -94,5 +94,12 @@ export class RegistroVentaServicioResponseDto {
     example: '2024-01-15T10:00:00Z',
   })
   created_at: string;
+
+  @ApiProperty({
+    description: 'Código de confirmación y fecha de creación combinados (confirmation_code + created_at)',
+    example: 'CONF-123-1705312800000-2024-01-15T10:00:00Z',
+    required: false,
+  })
+  confirmation_code_created_at?: string;
 }
 

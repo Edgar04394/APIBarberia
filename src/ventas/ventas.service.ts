@@ -134,11 +134,22 @@ export class VentasService {
       );
     }
 
-    // 4. Obtener estado de venta por defecto si no se proporciona
-    let estadoVentaId = registroDto.estado_venta_id;
-    // Si es 0, undefined o null, buscar estado por defecto
-    if (!estadoVentaId || estadoVentaId === 0) {
-      // Buscar estado por defecto (generalmente el primero o con código 'PENDIENTE')
+    // 4. Obtener estado de venta: mapear payment_status (string) a estado_venta_id (number)
+    let estadoVentaId: number;
+    
+    if (registroDto.payment_status) {
+      // Buscar estado por código (payment_status)
+      const estadoVenta = await this.estadoVentaRepository.findOne({
+        where: { codigo: registroDto.payment_status.toUpperCase() },
+      });
+      if (!estadoVenta) {
+        throw new NotFoundException(
+          `Estado de venta con código "${registroDto.payment_status}" no encontrado. Estados disponibles: PENDIENTE, PAGADA, CANCELADA, etc.`,
+        );
+      }
+      estadoVentaId = estadoVenta.estadoVentaId;
+    } else {
+      // Si no se proporciona payment_status, buscar estado por defecto (PENDIENTE)
       const estadoDefault = await this.estadoVentaRepository.findOne({
         where: { codigo: 'PENDIENTE' },
       });
@@ -151,14 +162,6 @@ export class VentasService {
         estadoVentaId = primerEstado[0].estadoVentaId;
       } else {
         estadoVentaId = estadoDefault.estadoVentaId;
-      }
-    } else {
-      // Validar que el estado proporcionado exista
-      const estadoVenta = await this.estadoVentaRepository.findOne({
-        where: { estadoVentaId },
-      });
-      if (!estadoVenta) {
-        throw new NotFoundException(`Estado de venta con ID ${estadoVentaId} no encontrado`);
       }
     }
 
@@ -543,12 +546,15 @@ export class VentasService {
     // Obtener payment_status del estado de venta
     const paymentStatus = venta.estadoVenta?.codigo || 'PENDIENTE';
 
-    // Obtener duration_minutes del servicio
+    // Obtener duration_minutes del servicio (SIEMPRE del servicio, no del request)
     const durationMinutes = servicio.duracionMinutos || 0;
 
-    // Obtener service_name y service_description: primero del request, luego del servicio
-    const serviceName = registroDto?.service_name || servicio.nombre || undefined;
-    const serviceDescription = registroDto?.service_description || servicio.descripcion || undefined;
+    // Obtener service_name y service_description: SIEMPRE del servicio (no del request)
+    const serviceName = servicio.nombre || undefined;
+    const serviceDescription = servicio.descripcion || undefined;
+
+    // Generar confirmation_code_created_at combinando confirmation_code y created_at
+    const confirmationCodeCreatedAt = `${confirmationCode}-${createdAt}`;
 
     return {
       id: venta.ventaId,
@@ -565,6 +571,7 @@ export class VentasService {
       payment_method: paymentMethod,
       confirmation_code: confirmationCode,
       created_at: createdAt,
+      confirmation_code_created_at: confirmationCodeCreatedAt,
     };
   }
 }
